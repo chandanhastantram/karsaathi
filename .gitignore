@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+backend/data/
+backend/app/rulesets/ACTIVE
+backend/app/rulesets/v2026.11.*.yaml
+frontend/node_modules/
+frontend/dist/
+.env

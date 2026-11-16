@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_USER: karsaathi
+      POSTGRES_PASSWORD: karsaathi
+      POSTGRES_DB: karsaathi
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  app:
+    build: .
+    ports: ["8000:8000"]
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://karsaathi:karsaathi@db:5432/karsaathi
+      KARSAATHI_TODAY: "2026-11-16"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      KARSAATHI_SECRET: ${KARSAATHI_SECRET:-change-me}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+    command: >
+      sh -c "pip install -q psycopg2-binary==2.9.9 && python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes: [bills:/app/backend/data]
+
+volumes:
+  pgdata:
+  bills:

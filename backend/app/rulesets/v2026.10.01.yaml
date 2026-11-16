@@ -1,0 +1,116 @@
+# KarSaathi rule set: GST rules as dated data.
+# The model never decides a rate, a threshold or a due date. Code reads them from here,
+# picks the entry valid on the document date, and cites `id` + `version` in every answer.
+#
+# NOTE: rate rows are a small demo table for a building-materials trader. Verify each
+# rate against the current CBIC rate notification before using this outside a demo.
+
+version: "2026.10.01"
+published_on: "2026-10-01"
+approved_by: "seed"
+notes: "Base rule set for the SIH 2026 demo. Rates follow the GST rate rationalisation effective 22 Sep 2025 (5% / 18% / 40% slabs)."
+
+hsn_rates:
+  - { id: R-HSN-2523, hsn: "2523", description: "Portland cement",            rate: 18, keywords: [cement],                 uqc: BAG, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-7214, hsn: "7214", description: "TMT steel bars and rods",    rate: 18, keywords: [steel, tmt, rod, bar],   uqc: KGS, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-8544, hsn: "8544", description: "Insulated electric cables",  rate: 18, keywords: [cable, wire],            uqc: MTR, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-3917, hsn: "3917", description: "PVC pipes and fittings",     rate: 18, keywords: [pipe, pvc, fitting],     uqc: NOS, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-3208, hsn: "3208", description: "Paints and varnishes",       rate: 18, keywords: [paint, varnish, primer], uqc: LTR, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-6907, hsn: "6907", description: "Ceramic floor and wall tiles", rate: 18, keywords: [tile, tiles, ceramic],  uqc: SQM, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-6910, hsn: "6910", description: "Ceramic sanitaryware",       rate: 18, keywords: [sanitary, basin, closet], uqc: NOS, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-HSN-3923, hsn: "3923", description: "Plastic tanks and containers", rate: 18, keywords: [tank, plastic, container], uqc: NOS, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-SAC-9965, hsn: "9965", description: "Goods transport agency service", rate: 5, keywords: [transport, freight, lorry, gta], uqc: OTH, rcm: true, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-SAC-9963, hsn: "9963", description: "Restaurant and food service", rate: 5, keywords: [food, meals, restaurant, hotel], uqc: OTH, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-SAC-9966, hsn: "9966", description: "Rent-a-cab service",        rate: 5,  keywords: [cab, taxi],              uqc: OTH, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-SAC-9954, hsn: "9954", description: "Construction and labour contract", rate: 18, keywords: [labour, contractor, loading, unloading], uqc: OTH, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+  - { id: R-SAC-9982, hsn: "9982", description: "Accounting and legal services", rate: 18, keywords: [accounting, audit, legal, ca], uqc: OTH, effective_from: "2025-09-22", effective_to: null, source: "https://cbic-gst.gov.in/gst-goods-services-rates.html" }
+
+blocked_credit:
+  - { id: R-17-5-B-I, hsn_prefix: "9963", reason: "Section 17(5)(b)(i): food and beverages, outdoor catering", source: "https://cbic-gst.gov.in/gst-acts.html" }
+  - { id: R-17-5-B-III, hsn_prefix: "9966", reason: "Section 17(5)(b)(i): rent-a-cab for passenger vehicles", source: "https://cbic-gst.gov.in/gst-acts.html" }
+
+place_of_supply:
+  id: R-POS-IGST
+  rule: "Supplier state = place of supply: CGST + SGST (half each). Different states: IGST."
+  source: "https://cbic-gst.gov.in/gst-acts.html"
+
+eway_bill:
+  id: R-138-EWB
+  threshold_value: 50000          # Rule 138(1): consignment value incl. tax
+  km_per_day: 200                 # Rule 138(10): regular cargo
+  odc_km_per_day: 20              # over-dimensional cargo
+  max_document_age_days: 180      # portal blocks EWB on documents older than this
+  extension_window_hours: 8       # extension allowed 8 h before / after expiry
+  vehicle_regex: "^([A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}|[0-9]{2}BH[0-9]{4}[A-Z]{1,2})$"
+  source: "https://www.incorpx.io/blog/e-way-bill-rules-2026-applicability-penalties"
+  validity_source: "https://vyaparapp.in/blog/e-way-bill-generation-validity-rules-2025/"
+  effective_from: "2025-01-01"
+
+itc_payment_condition:
+  id: R-37-180D
+  days: 180                       # Rule 37: reverse ITC if supplier unpaid 180 days from invoice date
+  warn_days: 150
+  source: "https://cleartax.in/s/rule-37-of-cgst-sgst-rules-itc-reversal-180-days"
+
+due_dates:
+  id: R-DUE-2026
+  gstr1_monthly_day: 11
+  gstr1_qrmp_day: 13              # 13th of the month after the quarter
+  gstr2b_generation_day: 14
+  gstr3b_monthly_day: 20
+  gstr3b_qrmp_day_cat_a: 22       # Karnataka, Maharashtra, Gujarat, TN, Kerala, Telangana, AP, Goa, MP, Chhattisgarh...
+  gstr3b_qrmp_day_cat_b: 24
+  qrmp_cat_a_states: ["22","23","24","26","27","29","30","31","32","33","34","35","36","37","38"]
+  pmt06_day: 25                   # QRMP: monthly tax payment for months 1 and 2 of the quarter
+  tds_deposit_day: 7
+  source: "https://www.incorpx.io/blog/gst-compliance-calendar-fy-2026-27"
+  source_2: "https://www.taxaj.com/learn/?p=392"
+
+late_fee:
+  id: R-47-LATEFEE
+  per_day: 50                     # Rs 25 CGST + Rs 25 SGST
+  per_day_nil: 20
+  cap_upto_1_5cr: 2000
+  cap_upto_5cr: 5000
+  cap_above_5cr: 10000
+  interest_rate_pct: 18           # Section 50(1) on net cash liability
+  source: "https://cbic-gst.gov.in/gst-acts.html"
+
+registration:
+  id: R-10A-BANK
+  bank_details_days: 30           # Rule 10A: furnish bank account within 30 days, else suspension risk
+  source: "https://cbic-gst.gov.in/gst-acts.html"
+
+tds:
+  id: R-TDS-LEGACY
+  note: "Legacy section labels (194C/194J). Map to the Income-tax Act, 2025 provisions before production use."
+  sections:
+    "194C": { rate_individual: 1, rate_other: 2, single_threshold: 30000, aggregate_threshold: 100000, sac: ["9954", "9965"] }
+    "194J": { rate: 10, threshold: 50000, sac: ["9982"] }
+  source: "https://incometaxindia.gov.in/"
+
+confidence:
+  id: R-CONF
+  auto_book_threshold: 0.85       # below this, the document goes to the review queue
+  qr_signed: 0.99
+  ocr_regex: 0.80
+  llm_cap: 0.95
+
+ims:
+  id: R-IMS
+  note: "Accepted invoices flow to GSTR-2B and then GSTR-3B ITC. Pending invoices carry forward. Rejected invoices do not give ITC."
+  source: "https://taxguru.in/?p=940298"
+
+states:
+  "07": Delhi
+  "06": Haryana
+  "08": Rajasthan
+  "09": Uttar Pradesh
+  "19": West Bengal
+  "24": Gujarat
+  "27": Maharashtra
+  "29": Karnataka
+  "32": Kerala
+  "33": Tamil Nadu
+  "36": Telangana
+  "37": Andhra Pradesh
